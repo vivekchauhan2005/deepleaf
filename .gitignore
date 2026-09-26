@@ -1,0 +1,31 @@
+@"
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+backend/venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+
+# Uploads
+backend/uploads/
+uploads/
+
+# Dataset / ML files
+dataset/
+ml/
+
+# Test files
+test.jpg
+"@ | Set-Content ".gitignore"
+.git_corrupt_backup/
