@@ -34,14 +34,16 @@ uploads/
 !frontend/public/*
 *.log
 
-# Machine learning large model artifacts (>100MB GitHub limit)
-*.keras
-*.h5
-*.tflite
-*.pt
-*.pth
+# Large raw datasets and local caches
 dataset/
-ml/
+ml/dataset/
+ml/.venv/
+ml/results/
+ml/data/*.csv
+ml/**/__pycache__/
+*.keras.bak
+*.py.bak
+*backup*
 
 # Weird escaped paths
 C*project*
