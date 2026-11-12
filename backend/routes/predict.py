@@ -33,19 +33,62 @@ router = APIRouter(
 
 
 def serialize_prediction(record):
-    """Convert a MongoDB prediction document into JSON-safe data."""
+    """Convert a MongoDB prediction document into JSON-safe data with full diagnostic details."""
     created_at = record.get("created_at")
+    record_id = str(record["_id"]) if "_id" in record else record.get("id")
+
+    disease = record.get("disease", "")
+    details = record.get("details")
+    if not details and disease:
+        try:
+            from services.prediction_service import get_disease_details
+            details = get_disease_details(disease)
+        except Exception:
+            details = None
+
+    status = record.get("status")
+    if not status:
+        if details and details.get("status"):
+            status = details["status"]
+        elif disease and "healthy" in str(disease).lower():
+            status = "Healthy"
+        elif disease:
+            status = "Diseased"
+        else:
+            status = "Unknown"
+
+    formatted_disease = (
+        record.get("formatted_disease")
+        or (details.get("disease_name") if details else disease)
+    )
+    plant_name = (
+        record.get("plant_name")
+        or (details.get("plant_name") if details else "Unknown Plant")
+    )
 
     return {
-        "id": str(record["_id"]),
+        "id": record_id,
+        "record_id": record_id,
         "filename": record.get("filename", "Unknown image"),
-        "is_leaf": record.get("is_leaf"),
-        "disease": record.get("disease"),
-        "formatted_disease": record.get("formatted_disease"),
-        "plant_name": record.get("plant_name"),
+        "is_leaf": record.get("is_leaf", True),
+        "leaf_confidence": record.get("leaf_confidence"),
+        "disease": disease,
+        "formatted_disease": formatted_disease,
+        "plant_name": plant_name,
         "confidence": record.get("confidence"),
-        "severity": record.get("severity"),
+        "severity": record.get("severity") or (details.get("severity") if details else "Low"),
+        "status": status,
         "message": record.get("message"),
+        "details": details,
+        "candidates_comparison": record.get("candidates_comparison", []),
+        "comparison": record.get("comparison", {}),
+        "top_predictions": record.get("top_predictions", []),
+        "dataset_evidence": record.get("dataset_evidence"),
+        "photography_tips": record.get("photography_tips", []),
+        "models_agree": record.get("models_agree", False),
+        "species_agree": record.get("species_agree", False),
+        "comparison_graph_base64": record.get("comparison_graph_base64"),
+        "comparison_graph_url": f"/predict/{record_id}/comparison-graph.png" if record_id else None,
         "created_at": (
             created_at.isoformat()
             if isinstance(created_at, datetime)
@@ -166,6 +209,99 @@ async def get_prediction_history(
                 "Unable to load prediction history. "
                 "Check the database connection."
             ),
+        )
+
+
+@router.get("/history/{record_id}", summary="Get Single Prediction Record")
+async def get_single_prediction_history(
+    record_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Return full details and diagnosis for a single saved prediction."""
+    if not ObjectId.is_valid(record_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid prediction record ID.",
+        )
+
+    try:
+        user_email = current_user["email"]
+        record = db["predictions"].find_one({
+            "_id": ObjectId(record_id),
+            "user_email": user_email,
+        })
+    except PyMongoError:
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to load prediction record.",
+        )
+
+    if not record:
+        raise HTTPException(
+            status_code=404,
+            detail="Prediction record not found.",
+        )
+
+    return {
+        "success": True,
+        "prediction": serialize_prediction(record),
+    }
+
+
+@router.delete("/history/{record_id}", summary="Delete Single Prediction Record")
+async def delete_prediction_history_item(
+    record_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Delete a specific prediction from user history."""
+    if not ObjectId.is_valid(record_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid prediction record ID.",
+        )
+
+    try:
+        user_email = current_user["email"]
+        result = db["predictions"].delete_one({
+            "_id": ObjectId(record_id),
+            "user_email": user_email,
+        })
+    except PyMongoError:
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to delete prediction record.",
+        )
+
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Prediction record not found or already deleted.",
+        )
+
+    return {
+        "success": True,
+        "message": "Prediction record deleted successfully.",
+        "record_id": record_id,
+    }
+
+
+@router.delete("/history", summary="Clear All Prediction History")
+async def clear_prediction_history(
+    current_user: dict = Depends(get_current_user),
+):
+    """Clear all saved predictions for the logged-in user."""
+    try:
+        user_email = current_user["email"]
+        result = db["predictions"].delete_many({"user_email": user_email})
+        return {
+            "success": True,
+            "message": f"Cleared {result.deleted_count} prediction record(s).",
+            "deleted_count": result.deleted_count,
+        }
+    except PyMongoError:
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to clear prediction history.",
         )
 
 

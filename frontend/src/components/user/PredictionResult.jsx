@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { getPredictionRecord } from '../../services/api';
 import {
   FaLeaf,
   FaCheckCircle,
@@ -17,16 +18,81 @@ import {
   FaInfoCircle,
   FaCamera,
   FaNotesMedical,
+  FaSpinner,
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PredictionResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const prediction = location.state;
+  const { id } = useParams();
+  const [prediction, setPrediction] = useState(location.state || null);
+  const [loadingRecord, setLoadingRecord] = useState(false);
 
   const [activeTab, setActiveTab] = useState('overview');
   const [activeGraphMode, setActiveGraphMode] = useState('prediction'); // 'prediction' | 'benchmark'
+
+  useEffect(() => {
+    if (location.state) {
+      setPrediction(location.state);
+      return;
+    }
+
+    const resolveRecord = async () => {
+      let candidate = null;
+      try {
+        const raw = localStorage.getItem('deepleaf_live_history');
+        if (raw) {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list) && list.length > 0) {
+            if (id) {
+              candidate = list.find(
+                (item) => String(item.id) === String(id) || String(item.record_id) === String(id)
+              );
+            }
+            if (!candidate && !id) {
+              candidate = list[0];
+            }
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      if (candidate) {
+        setPrediction(candidate);
+        return;
+      }
+
+      if (id) {
+        setLoadingRecord(true);
+        try {
+          const remote = await getPredictionRecord(id);
+          if (remote) {
+            setPrediction(remote);
+          }
+        } catch (err) {
+          console.warn('Could not fetch prediction record:', err);
+        } finally {
+          setLoadingRecord(false);
+        }
+      }
+    };
+
+    resolveRecord();
+  }, [id, location.state]);
+
+  if (loadingRecord) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-emerald-50 to-white px-4">
+        <div className="bg-white rounded-3xl shadow-xl p-8 text-center max-w-md border border-gray-100">
+          <FaSpinner className="text-4xl text-green-600 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-800 mb-1">Loading Diagnosis...</h2>
+          <p className="text-gray-500 text-sm">Retrieving your plant disease analysis</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!prediction) {
     return (

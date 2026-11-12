@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FaUpload,
   FaCamera,
@@ -204,31 +204,50 @@ const Detection = () => {
         throw new Error('Prediction failed.');
       }
 
+      const resultPayload = {
+        ...data,
+        id: data.record_id || `live_${Date.now()}`,
+        record_id: data.record_id || `live_${Date.now()}`,
+        is_leaf: data.is_leaf,
+        leaf_confidence: data.leaf_confidence,
+        disease: data.disease,
+        formatted_disease: data.formatted_disease,
+        plant_name: data.plant_name,
+        confidence: data.confidence,
+        severity: data.severity,
+        status: data.status,
+        message: data.message,
+        filename: data.filename || image.name,
+        preview,
+        dataset_evidence: data.dataset_evidence,
+        comparison: data.comparison,
+        candidates_comparison: data.candidates_comparison || [],
+        top_predictions: data.top_predictions || [],
+        details: data.details,
+        models_agree: data.models_agree,
+        species_agree: data.species_agree,
+        photography_tips: data.photography_tips,
+        comparison_graph_base64: data.comparison_graph_base64,
+        comparison_graph_url: data.comparison_graph_url,
+        history_saved: data.history_saved,
+        created_at: new Date().toISOString(),
+      };
+
+      // Persist to client live detection history cache (retains preview thumbnail)
+      try {
+        const rawHistory = localStorage.getItem('deepleaf_live_history');
+        const existingList = rawHistory ? JSON.parse(rawHistory) : [];
+        const filtered = existingList.filter((item) => item.id !== resultPayload.id);
+        const updated = [resultPayload, ...filtered].slice(0, 50);
+        localStorage.setItem('deepleaf_live_history', JSON.stringify(updated));
+      } catch (storageErr) {
+        console.warn('Unable to cache detection to localStorage:', storageErr);
+      }
+
       toast.success('Analysis complete! 🌿');
 
       navigate('/result', {
-        state: {
-          ...data,
-          is_leaf: data.is_leaf,
-          leaf_confidence: data.leaf_confidence,
-          disease: data.disease,
-          formatted_disease: data.formatted_disease,
-          plant_name: data.plant_name,
-          confidence: data.confidence,
-          severity: data.severity,
-          status: data.status,
-          message: data.message,
-          filename: data.filename,
-          preview,
-          dataset_evidence: data.dataset_evidence,
-          comparison: data.comparison,
-          top_predictions: data.top_predictions,
-          details: data.details,
-          models_agree: data.models_agree,
-          photography_tips: data.photography_tips,
-          record_id: data.record_id,
-          history_saved: data.history_saved,
-        },
+        state: resultPayload,
       });
     } catch (error) {
       console.error('Prediction error:', error);

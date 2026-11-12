@@ -165,4 +165,86 @@ export const checkBackendHealth = async () => {
   return response.json();
 };
 
+export const getPredictionHistory = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return { success: true, predictions: [], total: 0 };
+  }
+
+  let response;
+  try {
+    response = await fetch(`${API_URL}/predict/history`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (err) {
+    console.warn('Network error fetching history from backend:', err);
+    return { success: false, predictions: [], total: 0, error: 'Network error' };
+  }
+
+  if (response.status === 401) {
+    return { success: false, predictions: [], total: 0, error: 'Unauthorized' };
+  }
+
+  if (!response.ok) {
+    return { success: false, predictions: [], total: 0, error: 'Failed to fetch history' };
+  }
+
+  return response.json();
+};
+
+export const getPredictionRecord = async (recordId) => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const response = await fetch(`${API_URL}/predict/history/${recordId}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.prediction || null;
+  } catch (err) {
+    console.warn('Error fetching single prediction record:', err);
+    return null;
+  }
+};
+
+export const deletePredictionRecord = async (recordId) => {
+  const token = localStorage.getItem('token');
+  if (!token) return { success: false };
+
+  try {
+    const response = await fetch(`${API_URL}/predict/history/${recordId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return { success: false };
+    return await response.json();
+  } catch (err) {
+    console.warn('Error deleting prediction record:', err);
+    return { success: false };
+  }
+};
+
+export const clearPredictionHistory = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return { success: false };
+
+  try {
+    const response = await fetch(`${API_URL}/predict/history`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return { success: false };
+    return await response.json();
+  } catch (err) {
+    console.warn('Error clearing prediction history:', err);
+    return { success: false };
+  }
+};
+
 export default API_URL;

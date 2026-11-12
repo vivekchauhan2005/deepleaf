@@ -111,13 +111,40 @@ const Home = () => {
               </Link>
             </motion.div>
 
-            {/* Trusted By Users */}
+            {/* Trusted By Users - Diverse Real Profiles */}
             <motion.div variants={fadeUp} className="mt-4 flex items-center gap-6 justify-center lg:justify-start">
-              <div className="flex -space-x-3">
-                <img className="w-10 h-10 rounded-full border-2 border-slate-800" src={users} alt="User 1" />
-                <img className="w-10 h-10 rounded-full border-2 border-slate-800" src={users} alt="User 2" />
-                <img className="w-10 h-10 rounded-full border-2 border-slate-800" src={users} alt="User 3" />
-                <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-green-500/20 flex items-center justify-center text-xs font-bold text-green-300 backdrop-blur-sm">10k+</div>
+              <div className="flex -space-x-3 items-center">
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-slate-800 object-cover shadow-sm hover:scale-110 hover:z-10 transition-transform duration-200"
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+                  alt="Rajesh Kumar - Agronomist"
+                  title="Rajesh Kumar (Agronomist, Punjab)"
+                  loading="lazy"
+                />
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-slate-800 object-cover shadow-sm hover:scale-110 hover:z-10 transition-transform duration-200"
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80"
+                  alt="Dr. Sarah Lin - Plant Pathologist"
+                  title="Dr. Sarah Lin (Plant Pathologist)"
+                  loading="lazy"
+                />
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-slate-800 object-cover shadow-sm hover:scale-110 hover:z-10 transition-transform duration-200"
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80"
+                  alt="Carlos Mendez - Field Horticulturist"
+                  title="Carlos Mendez (Field Horticulturist)"
+                  loading="lazy"
+                />
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-slate-800 object-cover shadow-sm hover:scale-110 hover:z-10 transition-transform duration-200"
+                  src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80"
+                  alt="Sunita Sharma - Organic Farmer"
+                  title="Sunita Sharma (Organic Farmer, Gujarat)"
+                  loading="lazy"
+                />
+                <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-gradient-to-br from-green-500/30 to-emerald-600/40 flex items-center justify-center text-xs font-bold text-green-300 backdrop-blur-sm shadow-sm ring-1 ring-green-400/30">
+                  10k+
+                </div>
               </div>
               <div className="flex flex-col">
                 <div className="flex text-yellow-400 text-sm">

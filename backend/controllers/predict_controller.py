@@ -119,11 +119,17 @@ async def predict_controller(
             "plant_name": response["plant_name"],
             "confidence": response["confidence"],
             "severity": response["severity"],
+            "status": response.get("status"),
             "message": response["message"],
+            "details": response.get("details"),
             "comparison": response["comparison"],
             "candidates_comparison": response["candidates_comparison"],
             "dataset_evidence": response["dataset_evidence"],
             "top_predictions": response["top_predictions"],
+            "photography_tips": response.get("photography_tips"),
+            "comparison_graph_base64": response.get("comparison_graph_base64"),
+            "models_agree": response.get("models_agree", False),
+            "species_agree": response.get("species_agree", False),
             "created_at": datetime.now(timezone.utc),
         }
 

@@ -73,6 +73,7 @@ function App() {
           <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
           <Route path="/detection" element={<MainLayout><Detection /></MainLayout>} />
           <Route path="/result" element={<MainLayout><PredictionResult /></MainLayout>} />
+          <Route path="/result/:id" element={<MainLayout><PredictionResult /></MainLayout>} />
           <Route path="/history" element={<MainLayout><History /></MainLayout>} />
           <Route path="/remedies" element={<MainLayout><Remedies /></MainLayout>} />
           <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
