@@ -1,69 +1,91 @@
-from fastapi import APIRouter, HTTPException, status
+
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from passlib.context import CryptContext
-from jose import jwt
-from datetime import datetime, timedelta
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+from config.database import db
+from utils.auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+)
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"],
+)
 
-# Config
-SECRET_KEY = os.getenv("JWT_SECRET", "DeepLeaf@2026")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Models
+# Request models
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
 
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-# Helper Functions
-def hash_password(password: str):
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-# Connect to MongoDB (Import your DB connection from config)
-from config.database import db 
 
 @router.post("/register")
 async def register(user: UserCreate):
-    existing_user = db["users"].find_one({"email": user.email})
+    existing_user = db["users"].find_one({
+        "email": user.email
+    })
+
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_pw = hash_password(user.password)
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered",
+        )
+
+    hashed_password = hash_password(user.password)
+
     user_data = {
         "username": user.username,
         "email": user.email,
-        "password": hashed_pw
+        "password": hashed_password,
     }
-    result = db["users"].insert_one(user_data)
-    
-    token = create_access_token({"sub": user.email})
-    return {"access_token": token, "token_type": "bearer", "message": "User created successfully"}
+
+    db["users"].insert_one(user_data)
+
+    # Use the same JWT implementation as protected routes.
+    token = create_access_token({
+        "sub": user.email
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "message": "User created successfully",
+    }
+
 
 @router.post("/login")
 async def login(user: UserLogin):
-    existing_user = db["users"].find_one({"email": user.email})
-    if not existing_user or not verify_password(user.password, existing_user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token = create_access_token({"sub": user.email})
-    return {"access_token": token, "token_type": "bearer", "message": "Login successful"}
+    existing_user = db["users"].find_one({
+        "email": user.email
+    })
+
+    if (
+        not existing_user
+        or not verify_password(
+            user.password,
+            existing_user["password"],
+        )
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+        )
+
+    # Generate a token using the shared authentication helper.
+    token = create_access_token({
+        "sub": existing_user["email"]
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "message": "Login successful",
+    }

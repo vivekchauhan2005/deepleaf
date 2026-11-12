@@ -20,10 +20,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // ================= LOGIN =================
+ 
   const login = async (email, password) => {
     try {
-      const response = await fetch("http://localhost:8000/auth/login", {
+      const response = await fetch("http://localhost:8002/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
   // ================= REGISTER (Aapke diye gaye code ke hisaab se) =================
   const register = async (username, email, password) => {
     try {
-      const response = await fetch("http://localhost:8000/auth/register", {
+      const response = await fetch("http://localhost:8002/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

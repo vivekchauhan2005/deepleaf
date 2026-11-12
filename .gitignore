@@ -1,31 +1,55 @@
-@"
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.pyo
 
 # Virtual environments
 venv/
 .venv/
 backend/venv/
+backend copy/
+* copy/
 
-# IDE
-.vscode/
-.idea/
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.npm/
 
-# Environment files
+# Environment and sensitive data
 .env
 .env.*
+!.env.example
 
-# Uploads
+# Temporary uploads and test files
 backend/uploads/
 uploads/
+*.jpg
+*.jpeg
+*.png
+*.webp
+!frontend/src/assets/*
+!frontend/public/*
+*.log
 
-# Dataset / ML files
+# Machine learning large model artifacts (>100MB GitHub limit)
+*.keras
+*.h5
+*.tflite
+*.pt
+*.pth
 dataset/
 ml/
 
-# Test files
-test.jpg
-"@ | Set-Content ".gitignore"
+# Weird escaped paths
+C*project*
+*deepleaf*uploads*
+
+# OS & IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 .git_corrupt_backup/
