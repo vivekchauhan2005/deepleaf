@@ -35,7 +35,8 @@ uploads/
 *.log
 
 # Large raw datasets and local caches
-dataset/
+dataset/*
+!dataset/README.md
 ml/dataset/
 ml/.venv/
 ml/results/
